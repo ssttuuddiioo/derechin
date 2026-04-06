@@ -1,0 +1,19 @@
+{
+  "sentencia_id": "T-323/24",
+  "summary": {
+    "hechos": "Un juzgado municipal utiliz\u00f3 ChatGPT para redactar parte de la motivaci\u00f3n de una sentencia de tutela. Los accionantes impugnaron la decisi\u00f3n argumentando que una inteligencia artificial, y no un juez humano, hab\u00eda tomado la decisi\u00f3n, vulnerando su derecho al debido proceso y a un juez natural.",
+    "problema_juridico": "\u00bfEl uso de herramientas de inteligencia artificial generativa por parte de jueces en la redacci\u00f3n de sentencias vulnera los derechos fundamentales al debido proceso y al juez natural?",
+    "ratio_decidendi": "La Corte estableci\u00f3 que las herramientas de IA pueden ser utilizadas como instrumentos de apoyo en la investigaci\u00f3n jur\u00eddica y el an\u00e1lisis preliminar, pero la decisi\u00f3n judicial debe ser siempre el resultado del razonamiento humano del juez. La motivaci\u00f3n de las sentencias es una garant\u00eda del debido proceso que exige la deliberaci\u00f3n consciente de un ser humano investido de jurisdicci\u00f3n.",
+    "regla_decision": "Los jueces pueden usar IA como herramienta auxiliar de investigaci\u00f3n, pero est\u00e1 prohibido delegar la funci\u00f3n decisoria a sistemas automatizados. Toda sentencia debe reflejar el razonamiento aut\u00f3nomo del juez.",
+    "decision": "Concedi\u00f3 la tutela a favor de los accionantes. Declar\u00f3 que la sentencia impugnada vulneraba el debido proceso al carecer de motivaci\u00f3n judicial aut\u00f3noma. Orden\u00f3 proferir nueva decisi\u00f3n con razonamiento propio del juez.",
+    "salvamentos_resumen": "",
+    "temas": ["Inteligencia artificial", "Debido proceso", "Juez natural", "Tecnolog\u00eda judicial"],
+    "derechos": ["Derecho al debido proceso", "Derecho al juez natural", "Derecho de acceso a la justicia"],
+    "precedente_citado": ["T-760/08", "C-239/97"],
+    "cambio_precedente": false,
+    "nota_cambio": ""
+  },
+  "word_count": 12567,
+  "generated_at": "2024-12-15T10:30:00.000Z",
+  "model": "claude-sonnet-4-20250514"
+}

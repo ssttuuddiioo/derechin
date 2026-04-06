@@ -1,0 +1,19 @@
+{
+  "sentencia_id": "C-055/22",
+  "summary": {
+    "hechos": "El movimiento Causa Justa, integrado por m\u00e1s de 90 organizaciones de la sociedad civil, present\u00f3 demanda de inconstitucionalidad contra el art\u00edculo 122 del C\u00f3digo Penal que tipificaba el delito de aborto, argumentando que la penalizaci\u00f3n total del aborto violaba los derechos reproductivos de las mujeres.",
+    "problema_juridico": "\u00bfLa penalizaci\u00f3n del aborto consentido despu\u00e9s de las causales despenalizadas en C-355/06 vulnera los derechos fundamentales a la dignidad, la autonom\u00eda reproductiva y la igualdad de las mujeres y personas gestantes?",
+    "ratio_decidendi": "La Corte consider\u00f3 que la penalizaci\u00f3n absoluta del aborto m\u00e1s all\u00e1 de las causales de C-355/06 era desproporcionada e impon\u00eda una carga excesiva sobre las mujeres. Sin embargo, reconoci\u00f3 el inter\u00e9s leg\u00edtimo del Estado en la protecci\u00f3n de la vida prenatal, que se incrementa con el desarrollo gestacional. Estableci\u00f3 un sistema de plazos como soluci\u00f3n proporcional.",
+    "regla_decision": "El aborto no es delito hasta la semana 24 de gestaci\u00f3n. Despu\u00e9s de ese plazo, contin\u00faan vigentes las tres causales despenalizadas por la sentencia C-355/06. El Congreso debe regular integralmente la materia.",
+    "decision": "Declar\u00f3 la exequibilidad condicionada del art\u00edculo 122 del C\u00f3digo Penal, eliminando el delito de aborto hasta la semana 24 de gestaci\u00f3n y exhortando al Congreso a legislar de manera integral.",
+    "salvamentos_resumen": "Tres magistrados salvaron su voto argumentando que la protecci\u00f3n de la vida desde la concepci\u00f3n es un mandato constitucional y que la Corte sustituy\u00f3 al legislador al establecer un sistema de plazos.",
+    "temas": ["Aborto", "Derechos reproductivos", "Dignidad humana", "Autonom\u00eda reproductiva", "Despenalizaci\u00f3n"],
+    "derechos": ["Derechos reproductivos", "Dignidad humana", "Derecho a la igualdad", "Libre desarrollo de la personalidad"],
+    "precedente_citado": ["C-355/06"],
+    "cambio_precedente": true,
+    "nota_cambio": "Ampli\u00f3 significativamente el precedente de C-355/06, pasando de un sistema de causales a un sistema de plazos (24 semanas) para la despenalizaci\u00f3n del aborto."
+  },
+  "word_count": 67800,
+  "generated_at": "2024-12-15T10:45:00.000Z",
+  "model": "claude-sonnet-4-20250514"
+}

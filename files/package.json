@@ -1,0 +1,16 @@
+{
+  "name": "corte-constitucional-poc",
+  "version": "0.1.0",
+  "description": "Proof of concept: Constitutional Court jurisprudence explorer",
+  "type": "module",
+  "scripts": {
+    "fetch": "node src/01-fetch-metadata.js",
+    "scrape": "node src/02-scrape-relatoria.js",
+    "summarize": "node src/03-summarize.js",
+    "preview": "node src/04-preview.js",
+    "pipeline": "npm run fetch && npm run scrape && npm run summarize"
+  },
+  "dependencies": {
+    "node-html-parser": "^6.1.13"
+  }
+}

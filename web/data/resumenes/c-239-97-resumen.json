@@ -1,0 +1,19 @@
+{
+  "sentencia_id": "C-239/97",
+  "summary": {
+    "hechos": "Un ciudadano demand\u00f3 la inconstitucionalidad del art\u00edculo 326 del C\u00f3digo Penal que tipificaba el homicidio por piedad, argumentando que violaba el derecho a la vida consagrado en la Constituci\u00f3n de 1991.",
+    "problema_juridico": "\u00bfEs constitucional la penalizaci\u00f3n del homicidio por piedad cuando el paciente terminal ha expresado su consentimiento libre e informado para morir dignamente?",
+    "ratio_decidendi": "La Corte determin\u00f3 que el deber del Estado de proteger la vida debe armonizarse con el respeto a la dignidad humana y la autonom\u00eda personal. En el caso de enfermos terminales que padecen sufrimientos intensos, el consentimiento libre del paciente hace que la conducta del m\u00e9dico que pone fin a su vida no sea punible. El derecho a vivir dignamente implica tambi\u00e9n el derecho a morir dignamente.",
+    "regla_decision": "No se puede penalizar al m\u00e9dico que, con el consentimiento libre e informado del paciente terminal, realiza la eutanasia. El Estado debe regular el procedimiento para garantizar el consentimiento genuino.",
+    "decision": "Declar\u00f3 la exequibilidad condicionada del art\u00edculo 326 del C\u00f3digo Penal, estableciendo que no es punible la muerte por piedad cuando media consentimiento libre del enfermo terminal.",
+    "salvamentos_resumen": "Cinco magistrados salvaron su voto argumentando que el derecho a la vida es inviolable y que la Corte excedi\u00f3 sus competencias al despenalizar parcialmente la eutanasia por v\u00eda jurisprudencial.",
+    "temas": ["Eutanasia", "Derecho a morir dignamente", "Dignidad humana", "Autonom\u00eda personal"],
+    "derechos": ["Derecho a la vida digna", "Libre desarrollo de la personalidad", "Dignidad humana"],
+    "precedente_citado": [],
+    "cambio_precedente": true,
+    "nota_cambio": "Primera sentencia en Colombia que despenaliza condicionalmente la eutanasia, estableciendo un precedente sin antecedentes en la jurisprudencia constitucional colombiana."
+  },
+  "word_count": 45230,
+  "generated_at": "2024-12-15T10:00:00.000Z",
+  "model": "claude-sonnet-4-20250514"
+}

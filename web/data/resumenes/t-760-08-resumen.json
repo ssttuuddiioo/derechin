@@ -1,0 +1,19 @@
+{
+  "sentencia_id": "T-760/08",
+  "summary": {
+    "hechos": "La Corte acumul\u00f3 22 expedientes de tutela en los que ciudadanos denunciaban graves fallas sistem\u00e1ticas en el sistema de salud colombiano: negaci\u00f3n de servicios incluidos en el POS, barreras administrativas para acceder a tratamientos, y diferencias injustificadas entre los reg\u00edmenes contributivo y subsidiado.",
+    "problema_juridico": "\u00bfExiste una violaci\u00f3n masiva y sistem\u00e1tica del derecho fundamental a la salud que configure un estado de cosas inconstitucional en el sistema de salud colombiano?",
+    "ratio_decidendi": "La Corte concluy\u00f3 que el derecho a la salud es un derecho fundamental aut\u00f3nomo, no condicionado a su conexidad con el derecho a la vida. Las fallas del sistema de salud no eran casos aislados sino un problema estructural que requer\u00eda \u00f3rdenes generales dirigidas a las entidades responsables. El Estado tiene la obligaci\u00f3n de garantizar el goce efectivo del derecho a la salud eliminando barreras administrativas.",
+    "regla_decision": "El derecho a la salud es fundamental y aut\u00f3nomo. Las EPS no pueden negar servicios por razones administrativas cuando est\u00e1n en juego la vida y la integridad del paciente. Se ordena la unificaci\u00f3n progresiva de los planes de beneficios.",
+    "decision": "Declar\u00f3 el estado de cosas inconstitucional en materia de salud. Orden\u00f3 al Ministerio de Salud, la CRES y las EPS adoptar medidas estructurales para garantizar el derecho a la salud, incluyendo la actualizaci\u00f3n integral del POS y la unificaci\u00f3n de los reg\u00edmenes.",
+    "salvamentos_resumen": "Algunos magistrados aclararon su voto se\u00f1alando que las \u00f3rdenes estructurales deb\u00edan tener plazos m\u00e1s estrictos para evitar el incumplimiento del Gobierno.",
+    "temas": ["Derecho a la salud", "Estado de cosas inconstitucional", "Sistema de salud", "Reforma estructural"],
+    "derechos": ["Derecho a la salud", "Derecho a la vida", "Derecho a la igualdad"],
+    "precedente_citado": ["T-025/04"],
+    "cambio_precedente": true,
+    "nota_cambio": "Consolid\u00f3 el derecho a la salud como derecho fundamental aut\u00f3nomo, superando la l\u00ednea jurisprudencial que lo consideraba tutelable solo por conexidad con la vida."
+  },
+  "word_count": 98450,
+  "generated_at": "2024-12-15T10:15:00.000Z",
+  "model": "claude-sonnet-4-20250514"
+}
