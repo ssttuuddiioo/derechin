@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useMemo } from "react";
-import Link from "next/link";
-import { sentenciaIdToSlug } from "@/lib/utils";
 import { TIPO_CONFIG } from "@/lib/constants";
+import type { TrendingItem } from "@/app/page";
 
 type TipoKey = keyof typeof TIPO_CONFIG;
 
@@ -12,6 +11,7 @@ interface SearchResult {
   tipo: string;
   fecha: string;
   magistrado_ponente: string;
+  url_relatoria: string;
   temas: string[];
   snippet: string;
 }
@@ -19,7 +19,6 @@ interface SearchResult {
 function ResultCard({ result: r }: { result: SearchResult }) {
   const [copied, setCopied] = useState(false);
   const config = TIPO_CONFIG[r.tipo as TipoKey] || TIPO_CONFIG.T;
-  const slug = sentenciaIdToSlug(r.sentencia_id);
   const year = r.fecha ? new Date(r.fecha + "T00:00:00").getFullYear() : "";
 
   // Use first tema as title, clean up the dash format
@@ -37,9 +36,13 @@ function ResultCard({ result: r }: { result: SearchResult }) {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const relatoriaUrl = r.url_relatoria || `https://www.corteconstitucional.gov.co/relatoria/`;
+
   return (
-    <Link
-      href={`/sentencia/${slug}`}
+    <a
+      href={relatoriaUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       className="block rounded-xl p-4 hover:bg-white hover:shadow-whisper transition-all"
     >
       {/* Top row: tipo dot + title + sentencia ID tag */}
@@ -102,17 +105,18 @@ function ResultCard({ result: r }: { result: SearchResult }) {
           ))}
         </div>
       )}
-    </Link>
+    </a>
   );
 }
 
-export default function SearchResults() {
+export default function SearchResults({ trending = [] }: { trending?: TrendingItem[] }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [activeTipos, setActiveTipos] = useState<TipoKey[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const abortRef = useRef<AbortController>();
 
   const doSearch = useCallback(async (q: string) => {
     if (q.length < 2) {
@@ -120,16 +124,27 @@ export default function SearchResults() {
       setSearched(false);
       return;
     }
+
+    // Cancel any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setSearched(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+        signal: controller.signal,
+      });
       const data = await res.json();
-      setResults(data.results || []);
-    } catch {
-      setResults([]);
+      if (!controller.signal.aborted) {
+        setResults(data.results || []);
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (!controller.signal.aborted) setResults([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
@@ -191,17 +206,18 @@ export default function SearchResults() {
         </div>
       </form>
 
-      {/* Tipo filters */}
+      {/* Tipo filters — disabled until results show */}
       <div className="flex flex-wrap items-center gap-2 justify-center mb-8">
         {(Object.keys(TIPO_CONFIG) as TipoKey[]).map((tipo) => {
           const config = TIPO_CONFIG[tipo];
-          const active =
-            activeTipos.length === 0 || activeTipos.includes(tipo);
+          const hasResults = results.length > 0;
+          const active = hasResults && activeTipos.includes(tipo);
           return (
             <button
               key={tipo}
-              onClick={() => toggleTipo(tipo)}
-              className="rounded-pill px-3 py-1 text-sm font-medium border transition-all"
+              onClick={() => hasResults && toggleTipo(tipo)}
+              disabled={!hasResults}
+              className="rounded-pill px-3 py-1 text-sm font-medium border transition-all disabled:cursor-default"
               style={
                 active
                   ? {
@@ -211,8 +227,9 @@ export default function SearchResults() {
                     }
                   : {
                       backgroundColor: "#ffffff",
-                      color: "#b0b4ba",
+                      color: hasResults ? "#60646c" : "#b0b4ba",
                       borderColor: "#e0e1e6",
+                      opacity: hasResults ? 1 : 0.5,
                     }
               }
             >
@@ -221,6 +238,63 @@ export default function SearchResults() {
           );
         })}
       </div>
+
+      {/* Trending — shown when no search */}
+      {!searched && !loading && trending.length > 0 && (
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-silver mb-5 text-center">
+            Tendencias esta semana
+          </p>
+          <div className="space-y-1">
+            {trending.map((t) => {
+              const config = TIPO_CONFIG[t.tipo as TipoKey] || TIPO_CONFIG.T;
+              const mainTema = t.temas[0] || "";
+              const title = mainTema
+                ? mainTema.replace(/-/g, " \u2014 ").replace(/\s+/g, " ")
+                : t.sentencia_id;
+              const year = t.fecha ? new Date(t.fecha + "T00:00:00").getFullYear() : "";
+
+              return (
+                <a
+                  key={t.sentencia_id}
+                  href={t.url_relatoria || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block rounded-xl p-4 hover:bg-white hover:shadow-whisper transition-all"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-1.5">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <span
+                        className="mt-1 flex-shrink-0 w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: config.bg }}
+                      />
+                      <h3 className="text-[15px] font-semibold text-black leading-snug">
+                        {title}
+                      </h3>
+                    </div>
+                    <span className="flex-shrink-0 rounded-md bg-cloud-gray border border-border-lavender px-2 py-0.5 text-xs font-mono text-slate-gray">
+                      {t.sentencia_id}
+                    </span>
+                  </div>
+                  <p className="text-xs text-silver mb-1.5 pl-[18px] text-left">
+                    {config.label}
+                    {year && <span> &middot; {year}</span>}
+                    {t.magistrado_ponente && <span> &middot; MP: {t.magistrado_ponente}</span>}
+                  </p>
+                  {t.snippet && (
+                    <p className="text-sm text-mid-slate leading-relaxed pl-[18px] text-left">
+                      {t.snippet.length > 160 ? t.snippet.slice(0, 160) + "..." : t.snippet}
+                    </p>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-silver mt-6 text-center">
+            Pr&oacute;ximamente: tendencias reales basadas en b&uacute;squedas de usuarios
+          </p>
+        </div>
+      )}
 
       {/* Results */}
       {searched && !loading && filtered.length === 0 && (

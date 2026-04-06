@@ -6,6 +6,15 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const QUICK_PROMPT = `Eres un experto en derecho constitucional colombiano. Lee la siguiente sentencia y devuelve un JSON con exactamente estos 4 campos:
+{
+  "problema_juridico": "El problema jur\u00eddico central como pregunta (1-2 oraciones)",
+  "decision": "Lo que decidi\u00f3 la Corte (1-2 oraciones)",
+  "temas": ["3-5 temas jur\u00eddicos espec\u00edficos"],
+  "relevancia": "Por qu\u00e9 importa esta sentencia (1 oraci\u00f3n)"
+}
+Responde SOLO con el JSON, sin texto adicional. Todo en espa\u00f1ol.`;
+
 const SUMMARY_PROMPT = `Eres un experto en derecho constitucional colombiano. Analiza el siguiente texto de una sentencia de la Corte Constitucional de Colombia y genera una FICHA JURISPRUDENCIAL completa en formato JSON.
 
 El JSON debe tener exactamente estos campos:
@@ -39,7 +48,8 @@ INSTRUCCIONES:
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, sentencia_id } = body;
+    const { url, sentencia_id, mode = "quick" } = body;
+    const isQuick = mode === "quick";
 
     if (!url && !sentencia_id) {
       return NextResponse.json(
@@ -98,26 +108,27 @@ export async function POST(request: NextRequest) {
       fullText = data.texto_completo;
     }
 
-    // Truncate to ~150k chars
-    if (fullText.length > 150000) {
-      fullText = fullText.slice(0, 150000);
+    // Truncate: quick mode uses less text for speed
+    const maxChars = isQuick ? 30000 : 150000;
+    if (fullText.length > maxChars) {
+      fullText = fullText.slice(0, maxChars);
     }
 
     if (fullText.length < 100) {
       return NextResponse.json(
-        { error: "El texto extraído es demasiado corto" },
+        { error: "El texto extra\u00eddo es demasiado corto" },
         { status: 400 }
       );
     }
 
-    // Call Claude API
+    const prompt = isQuick ? QUICK_PROMPT : SUMMARY_PROMPT;
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      model: isQuick ? "claude-sonnet-4-20250514" : "claude-sonnet-4-20250514",
+      max_tokens: isQuick ? 1024 : 4096,
       messages: [
         {
           role: "user",
-          content: `${SUMMARY_PROMPT}\n\n--- TEXTO DE LA SENTENCIA ---\n\n${fullText}`,
+          content: `${prompt}\n\n--- TEXTO DE LA SENTENCIA ---\n\n${fullText}`,
         },
       ],
     });

@@ -10,75 +10,53 @@ export async function GET(request: NextRequest) {
   const sb = getSupabase();
 
   try {
-    // Run all searches in parallel
-    const [idRes, decisionRes, hechosRes] = await Promise.all([
-      // 1. Sentencia ID or magistrado match
-      sb
-        .from("sentencias")
-        .select("sentencia_id, tipo, fecha, magistrado_ponente")
-        .or(`sentencia_id.ilike.%${q}%,magistrado_ponente.ilike.%${q}%`)
-        .order("fecha", { ascending: false })
-        .limit(10),
-      // 2. Decision text search
-      sb
-        .from("sentencia_resumenes")
-        .select("sentencia_id, temas, hechos, decision")
-        .ilike("decision", `%${q}%`)
-        .limit(15),
-      // 3. Hechos text search
-      sb
-        .from("sentencia_resumenes")
-        .select("sentencia_id, temas, hechos, decision")
-        .ilike("hechos", `%${q}%`)
-        .limit(15),
-    ]);
+    // Split into words for multi-term matching
+    const terms = q.split(/\s+/).filter((t) => t.length >= 2);
+    const primaryTerm = terms[0];
 
-    // 4. Try tema search via RPC (array_to_string ILIKE) or fallback to contains
-    let temaResults: typeof decisionRes.data = [];
+    // Single fast query: search resumenes decision + hechos with ilike
+    // This is the most content-rich search
+    const { data: resData } = await sb
+      .from("sentencia_resumenes")
+      .select("sentencia_id, temas, hechos, decision")
+      .or(
+        `decision.ilike.%${primaryTerm}%,hechos.ilike.%${primaryTerm}%`
+      )
+      .limit(40);
+
+    // Also try tema RPC if available
+    let temaData: typeof resData = [];
     try {
       const { data } = await sb.rpc("search_by_tema", {
-        query_text: q,
-        max_results: 15,
+        query_text: primaryTerm,
+        max_results: 20,
       });
-      if (data && data.length > 0) temaResults = data;
+      if (data) temaData = data;
     } catch {
-      // RPC not available — fallback to exact contains
-      const patterns = [
-        q.toUpperCase(),
-        q.charAt(0).toUpperCase() + q.slice(1).toLowerCase(),
-        `DERECHO A LA ${q.toUpperCase()}`,
-        `DERECHO AL ${q.toUpperCase()}`,
-      ];
-      for (const p of patterns) {
-        const { data } = await sb
-          .from("sentencia_resumenes")
-          .select("sentencia_id, temas, hechos, decision")
-          .contains("temas", [p])
-          .limit(10);
-        if (data && data.length > 0) {
-          temaResults = data;
-          break;
-        }
-      }
+      // RPC not available
     }
 
-    // Merge all results, deduplicate
+    // Also match sentencia_id directly (fast, indexed)
+    const { data: idData } = await sb
+      .from("sentencias")
+      .select("sentencia_id, tipo, fecha, magistrado_ponente")
+      .ilike("sentencia_id", `%${primaryTerm}%`)
+      .limit(10);
+
+    // Merge all, deduplicate, score by multi-term relevance
     const seen = new Set<string>();
-    const results: Array<{
+    const termsLower = terms.map((t) => t.toLowerCase());
+
+    interface Scored {
       sentencia_id: string;
-      tipo: string;
-      fecha: string;
-      magistrado_ponente: string;
       temas: string[];
       snippet: string;
-    }> = [];
+      score: number;
+    }
 
-    // Metadata lookup from ID search
-    const metaMap = new Map(
-      (idRes.data || []).map((s) => [s.sentencia_id, s])
-    );
+    const scored: Scored[] = [];
 
-    const add = (
+    const addEntry = (
       id: string,
       temas: string[],
       hechos: string | null,
@@ -86,58 +64,96 @@ export async function GET(request: NextRequest) {
     ) => {
       if (seen.has(id)) return;
       seen.add(id);
-      const meta = metaMap.get(id);
-      let snippet = "";
-      if (hechos && hechos.length > 10 && hechos !== "Sin Información") {
-        snippet = hechos.slice(0, 200);
-      } else if (decision) {
-        snippet = decision.slice(0, 200);
-      }
-      // Highlight matching temas
-      const qLower = q.toLowerCase();
-      const matchingTemas = (temas || []).filter((t) =>
-        t.toLowerCase().includes(qLower)
-      );
-      const displayTemas =
-        matchingTemas.length > 0
-          ? matchingTemas.slice(0, 5)
-          : (temas || []).slice(0, 3);
 
-      results.push({
+      let snippet = "";
+      if (hechos && hechos.length > 10 && hechos !== "Sin Informaci\u00f3n") {
+        snippet = hechos;
+      } else if (decision) {
+        snippet = decision;
+      }
+
+      // Score: how many search terms appear in temas + snippet
+      const searchable = (
+        (temas || []).join(" ") +
+        " " +
+        snippet
+      ).toLowerCase();
+      let score = 0;
+      for (const term of termsLower) {
+        if (searchable.includes(term)) score += 1;
+      }
+
+      // Prefer results with matching temas
+      const matchingTemas = (temas || []).filter((t) =>
+        termsLower.some((term) => t.toLowerCase().includes(term))
+      );
+      if (matchingTemas.length > 0) score += 2;
+
+      scored.push({
         sentencia_id: id,
-        tipo: meta?.tipo || id.split("-")[0] || "T",
-        fecha: meta?.fecha || "",
-        magistrado_ponente: meta?.magistrado_ponente || "",
-        temas: displayTemas,
-        snippet,
+        temas: matchingTemas.length > 0
+          ? matchingTemas.slice(0, 5)
+          : (temas || []).slice(0, 3),
+        snippet: snippet.slice(0, 200),
+        score,
       });
     };
 
-    // Priority: tema matches > hechos matches > decision matches > ID matches
-    for (const r of temaResults || []) add(r.sentencia_id, r.temas, r.hechos, r.decision);
-    for (const r of hechosRes.data || []) add(r.sentencia_id, r.temas, r.hechos, r.decision);
-    for (const r of decisionRes.data || []) add(r.sentencia_id, r.temas, r.hechos, r.decision);
-    for (const r of idRes.data || []) add(r.sentencia_id, [], null, null);
-
-    // Fetch missing metadata in bulk
-    const needMeta = results.filter((r) => !r.fecha).map((r) => r.sentencia_id);
-    if (needMeta.length > 0) {
-      const { data } = await sb
-        .from("sentencias")
-        .select("sentencia_id, tipo, fecha, magistrado_ponente")
-        .in("sentencia_id", needMeta.slice(0, 50));
-      const extra = new Map((data || []).map((m) => [m.sentencia_id, m]));
-      results.forEach((r) => {
-        const m = extra.get(r.sentencia_id);
-        if (m && !r.fecha) {
-          r.tipo = m.tipo;
-          r.fecha = m.fecha;
-          r.magistrado_ponente = m.magistrado_ponente;
-        }
-      });
+    // Tema results first (highest quality)
+    for (const r of temaData || []) {
+      addEntry(r.sentencia_id, r.temas, r.hechos, r.decision);
+    }
+    // Then text matches
+    for (const r of resData || []) {
+      addEntry(r.sentencia_id, r.temas, r.hechos, r.decision);
+    }
+    // Then ID matches
+    for (const r of idData || []) {
+      if (!seen.has(r.sentencia_id)) {
+        seen.add(r.sentencia_id);
+        scored.push({
+          sentencia_id: r.sentencia_id,
+          temas: [],
+          snippet: "",
+          score: 1,
+        });
+      }
     }
 
-    return NextResponse.json({ results: results.slice(0, 20) });
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+
+    // Filter: if multiple terms, require at least 1 match
+    const minScore = terms.length > 1 ? 1 : 0;
+    const top = scored.filter((r) => r.score >= minScore).slice(0, 20);
+
+    // Fetch metadata for all results in one call
+    const ids = top.map((r) => r.sentencia_id);
+    const { data: metaData } = ids.length > 0
+      ? await sb
+          .from("sentencias")
+          .select("sentencia_id, tipo, fecha, magistrado_ponente, url_relatoria")
+          .in("sentencia_id", ids)
+      : { data: [] };
+
+    const metaMap = new Map(
+      (metaData || []).map((m) => [m.sentencia_id, m])
+    );
+
+    const results = top.map((r) => {
+      const meta = metaMap.get(r.sentencia_id);
+      return {
+        sentencia_id: r.sentencia_id,
+        tipo: meta?.tipo || r.sentencia_id.split("-")[0] || "T",
+        fecha: meta?.fecha || "",
+        magistrado_ponente: meta?.magistrado_ponente || "",
+        url_relatoria: meta?.url_relatoria || "",
+        temas: r.temas,
+        snippet: r.snippet,
+      };
+    });
+
+    return NextResponse.json({ results });
   } catch (err) {
     console.error("Search error:", err);
     return NextResponse.json({ error: "Error" }, { status: 500 });

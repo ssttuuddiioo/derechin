@@ -120,6 +120,19 @@ CREATE INDEX idx_precedentes_citada ON precedentes(sentencia_citada_id);
 CREATE INDEX idx_precedentes_relacion ON precedentes(relacion);
 
 -- ────────────────────────────────────────────────────────────
+-- Waitlist / early-access signups
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE waitlist_signups (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT NOT NULL,
+  intent TEXT CHECK (intent IN ('full_now', 'wait')),  -- what the user chose
+  sentencia_id TEXT,                                    -- which ruling they were looking at
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_waitlist_email ON waitlist_signups(email);
+
+-- ────────────────────────────────────────────────────────────
 -- Row Level Security (for Supabase Auth + freemium model)
 -- ────────────────────────────────────────────────────────────
 ALTER TABLE sentencias ENABLE ROW LEVEL SECURITY;
@@ -141,6 +154,11 @@ CREATE POLICY "Service write" ON sentencia_textos FOR ALL USING (auth.role() = '
 CREATE POLICY "Service write" ON sentencia_resumenes FOR ALL USING (auth.role() = 'service_role');
 CREATE POLICY "Service write" ON sentencia_embeddings FOR ALL USING (auth.role() = 'service_role');
 CREATE POLICY "Service write" ON precedentes FOR ALL USING (auth.role() = 'service_role');
+
+-- Waitlist: anyone can insert, only service role can read
+ALTER TABLE waitlist_signups ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can sign up" ON waitlist_signups FOR INSERT WITH CHECK (true);
+CREATE POLICY "Service read" ON waitlist_signups FOR SELECT USING (auth.role() = 'service_role');
 
 -- ────────────────────────────────────────────────────────────
 -- Useful views
